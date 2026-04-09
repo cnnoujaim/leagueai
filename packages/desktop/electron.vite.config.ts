@@ -7,7 +7,13 @@ export default defineConfig({
     plugins: [externalizeDepsPlugin()],
     define: {
       "process.env.LEAGUEAI_SERVER_URL": JSON.stringify(
-        process.env.LEAGUEAI_SERVER_URL || "http://localhost:3001"
+        process.env.LEAGUEAI_SERVER_URL || "https://leagueai-server-production.up.railway.app"
+      ),
+      "process.env.SUPABASE_URL": JSON.stringify(
+        process.env.SUPABASE_URL || "https://lkmzltfmwsnvzkbefpig.supabase.co"
+      ),
+      "process.env.SUPABASE_ANON_KEY": JSON.stringify(
+        process.env.SUPABASE_ANON_KEY || ""
       ),
     },
   },

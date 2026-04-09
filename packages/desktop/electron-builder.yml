@@ -1,6 +1,7 @@
 appId: com.leagueai.desktop
 productName: LeagueAI
 copyright: Copyright 2026 LeagueAI
+electronVersion: "32.3.3"
 
 directories:
   output: release
