@@ -26,6 +26,11 @@ contextBridge.exposeInMainWorld("leagueAI", {
     ipcRenderer.on("game:flow-changed", (_, phase) => callback(phase));
   },
 
+  // Receive live stats
+  onLiveStatsUpdate: (callback: (stats: unknown) => void) => {
+    ipcRenderer.on("live:stats-update", (_, stats) => callback(stats));
+  },
+
   // Overlay control
   setIgnoreMouseEvents: (ignore: boolean) => {
     ipcRenderer.send("overlay:set-ignore-mouse", ignore);

@@ -1,5 +1,25 @@
 import { create } from "zustand";
 
+export interface PlayerStats {
+  championName: string;
+  level: number;
+  kills: number;
+  deaths: number;
+  assists: number;
+  cs: number;
+  gold?: number;
+  items: string[];
+  isDead: boolean;
+  summonerName: string;
+}
+
+export interface LiveStatsSnapshot {
+  gameTime: number;
+  player: PlayerStats;
+  myTeam: PlayerStats[];
+  enemyTeam: PlayerStats[];
+}
+
 interface GameState {
   phase: string;
   coachingText: string;
@@ -10,6 +30,8 @@ interface GameState {
   updateText: string;
   isUpdateLoading: boolean;
   isUpdateDone: boolean;
+  liveStats: LiveStatsSnapshot | null;
+  activeTab: "coaching" | "stats";
 
   setPhase: (phase: string) => void;
   appendCoachingText: (text: string) => void;
@@ -21,6 +43,8 @@ interface GameState {
   setExpanded: (expanded: boolean) => void;
   appendUpdateText: (text: string) => void;
   setUpdateDone: () => void;
+  setLiveStats: (stats: LiveStatsSnapshot) => void;
+  setActiveTab: (tab: "coaching" | "stats") => void;
 }
 
 export const useGameStore = create<GameState>((set) => ({
@@ -33,6 +57,8 @@ export const useGameStore = create<GameState>((set) => ({
   updateText: "",
   isUpdateLoading: false,
   isUpdateDone: false,
+  liveStats: null,
+  activeTab: "coaching",
 
   setPhase: (phase) => set({ phase }),
 
@@ -66,6 +92,7 @@ export const useGameStore = create<GameState>((set) => ({
       updateText: "",
       isUpdateLoading: false,
       isUpdateDone: false,
+      liveStats: null,
     }),
 
   appendUpdateText: (text) =>
@@ -81,4 +108,8 @@ export const useGameStore = create<GameState>((set) => ({
   toggleExpanded: () => set((state) => ({ isExpanded: !state.isExpanded })),
 
   setExpanded: (expanded) => set({ isExpanded: expanded }),
+
+  setLiveStats: (stats) => set({ liveStats: stats }),
+
+  setActiveTab: (tab) => set({ activeTab: tab }),
 }));

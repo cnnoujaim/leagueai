@@ -34,12 +34,24 @@ win:
     - target: nsis
       arch:
         - x64
+    - target: portable
+      arch:
+        - x64
   icon: resources/icons/icon.png
+  requestedExecutionLevel: asInvoker
 
 nsis:
-  oneClick: true
+  oneClick: false
+  allowToChangeInstallationDirectory: true
   perMachine: false
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: LeagueAI
   artifactName: LeagueAI-${version}-win-setup.exe
+  uninstallDisplayName: LeagueAI
+
+portable:
+  artifactName: LeagueAI-${version}-win-portable.exe
 
 linux:
   target:

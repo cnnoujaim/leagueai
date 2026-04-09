@@ -100,7 +100,8 @@ coachingRouter.post("/update", async (req: Request, res: Response) => {
     return;
   }
 
-  const prompt = buildInGameUpdatePrompt(body);
+  const meta = await getMetaData();
+  const prompt = buildInGameUpdatePrompt(body, meta);
 
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");

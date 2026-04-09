@@ -1,5 +1,6 @@
 import { readFile, access } from "node:fs/promises";
 import { watch } from "node:fs";
+import { dirname } from "node:path";
 import https from "node:https";
 import { EventEmitter } from "node:events";
 import { WebSocket } from "ws";
@@ -109,7 +110,7 @@ export class LCUConnector extends EventEmitter {
     // Watch common lockfile paths
     for (const lockfilePath of this.adapter.getLockfilePaths()) {
       try {
-        const dir = lockfilePath.substring(0, lockfilePath.lastIndexOf("/"));
+        const dir = dirname(lockfilePath);
         this.fileWatcher = watch(dir, async (_, filename) => {
           if (filename === "lockfile") {
             const creds = await this.tryFindCredentials();

@@ -48,7 +48,8 @@ Provide a matchup briefing for ${req.playerChampion} (${req.playerRole}) vs ${re
 2. **KEY ABILITIES TO WATCH**: Enemy abilities that are dangerous — what they do and when they come online
 3. **COUNTERPLAY** (3-4 bullet points): Specific actions to take or avoid
 4. **POWER SPIKES**: When you are strong vs when the enemy is strong (by level and items)
-5. **TEAM FIGHT ROLE**: Your job in team fights given both team compositions`;
+5. **BUILD PATH**: Walk through the recommended build order above and note if/when to deviate. Consider the enemy team comp — call out specific items to swap in against heavy AP, heavy AD, healing, or CC-heavy comps. Include situational boot choices.
+6. **TEAM FIGHT ROLE**: Your job in team fights given both team compositions`;
 
   return userPrompt;
 }
@@ -83,10 +84,15 @@ ${req.matchupBriefing}`;
   return prompt;
 }
 
-export function buildInGameUpdatePrompt(req: InGameUpdateRequest): string {
+export function buildInGameUpdatePrompt(
+  req: InGameUpdateRequest,
+  meta: PatchMeta | null = null
+): string {
   const minutes = Math.floor(req.gameTime / 60);
   const p = req.playerStats;
   const e = req.enemyStats;
+
+  const championMeta = meta?.champions[req.playerChampion]?.[req.playerRole];
 
   let prompt = `IN-GAME UPDATE at ${minutes} minutes for ${req.playerChampion} (${req.playerRole}) vs ${req.enemyChampion} (${req.enemyRole}):
 
@@ -98,16 +104,21 @@ Items: ${e.items.length > 0 ? e.items.join(", ") : "Starting items"}
 
 Teams: ${req.teamComp.join(", ")} vs ${req.enemyComp.join(", ")}`;
 
+  if (championMeta) {
+    prompt += `\n\nRECOMMENDED BUILD PATH: ${championMeta.recommendedBuild.items.join(" → ")}`;
+  }
+
   if (req.recentEvents.length > 0) {
     prompt += `\n\nRECENT EVENTS:\n${req.recentEvents.map(e => `- ${e}`).join("\n")}`;
   }
 
   prompt += `\n\nORIGINAL GAME PLAN:\n${req.previousBriefing}`;
 
-  prompt += `\n\nGive a SHORT mid-game update (under 150 words). Include:
+  prompt += `\n\nGive a SHORT mid-game update (under 200 words). Include:
 1. **STATUS**: Are you ahead, even, or behind? One sentence.
-2. **ADJUST**: What should you do differently right now based on the game state? 2-3 bullet points.
-3. **NEXT OBJECTIVE**: What should you focus on in the next few minutes?
+2. **BUILD CHECK**: Compare current items to the recommended build path. If the player should deviate from the standard build based on the game state (e.g. behind and need a defensive item, enemy comp is all-AD, heavy healing on enemy team), recommend the specific item swap and why. If on track, say so in one line.
+3. **ADJUST**: What should you do differently right now based on the game state? 2-3 bullet points.
+4. **NEXT OBJECTIVE**: What should you focus on in the next few minutes?
 
 Do NOT repeat the original game plan. Only give NEW advice based on the CURRENT game state.`;
 

@@ -9,7 +9,10 @@
     "dev": "electron-vite build && env -u ELECTRON_RUN_AS_NODE electron .",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
-    "package": "electron-vite build && electron-builder --config electron-builder.yml"
+    "package": "electron-vite build && electron-builder --config electron-builder.yml",
+    "package:win": "electron-vite build && electron-builder --config electron-builder.yml --win",
+    "package:mac": "electron-vite build && electron-builder --config electron-builder.yml --mac",
+    "package:linux": "electron-vite build && electron-builder --config electron-builder.yml --linux"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.102.1",

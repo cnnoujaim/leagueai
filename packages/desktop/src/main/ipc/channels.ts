@@ -11,6 +11,9 @@ export const IPC = {
   COACHING_UPDATE_CHUNK: "coaching:update-chunk",
   COACHING_UPDATE_DONE: "coaching:update-done",
 
+  // Live stats (main → renderer)
+  LIVE_STATS_UPDATE: "live:stats-update",
+
   // Overlay control (renderer → main)
   SET_IGNORE_MOUSE: "overlay:set-ignore-mouse",
   SHOW_OVERLAY: "overlay:show",

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Tray, Menu, ipcMain, screen } from "electron";
+import { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage, screen } from "electron";
 import path from "node:path";
 import { config } from "dotenv";
 
@@ -83,10 +83,13 @@ function createOverlayWindow(): BrowserWindow {
 }
 
 function createTray(): void {
-  // Use a simple template for now — replace with actual icon later
-  tray = new Tray(
-    path.join(__dirname, "../../resources/icons/tray-icon.png")
-  );
+  const iconPath = path.join(__dirname, "../../resources/icons/tray-icon.png");
+  const icon = nativeImage.createFromPath(iconPath);
+  // Windows tray icons should be 16x16; resize to avoid blurry scaling
+  const trayIcon = process.platform === "win32"
+    ? icon.resize({ width: 16, height: 16 })
+    : icon;
+  tray = new Tray(trayIcon);
 
   const contextMenu = Menu.buildFromTemplate([
     {
@@ -178,6 +181,9 @@ function setupGameFlow(): void {
       liveClient.stop();
       liveClient.start(30_000);
     }
+
+    // Forward live stats to renderer for the scoreboard
+    forwardLiveStats(data);
   });
 
   // Keep overlay on top while in game (League reasserts z-order)
@@ -266,6 +272,36 @@ function startUpdateCycle(): void {
   }, 5 * 60 * 1000);
 }
 
+function forwardLiveStats(data: import("./game/types.js").LiveClientData): void {
+  const me = data.allPlayers.find(
+    (p) => p.summonerName === data.activePlayer.summonerName
+  );
+  if (!me) return;
+
+  const myTeam = data.allPlayers.filter((p) => p.team === me.team);
+  const enemyTeam = data.allPlayers.filter((p) => p.team !== me.team);
+
+  const mapPlayer = (p: import("./game/types.js").LivePlayerData, isSelf: boolean) => ({
+    championName: p.championName,
+    level: p.level,
+    kills: p.scores.kills,
+    deaths: p.scores.deaths,
+    assists: p.scores.assists,
+    cs: p.scores.creepScore,
+    gold: isSelf ? data.activePlayer.currentGold : undefined,
+    items: p.items.map((i) => i.displayName),
+    isDead: p.isDead,
+    summonerName: p.summonerName,
+  });
+
+  overlayWindow?.webContents.send(IPC.LIVE_STATS_UPDATE, {
+    gameTime: data.gameData.gameTime,
+    player: mapPlayer(me, true),
+    myTeam: myTeam.map((p) => mapPlayer(p, p.summonerName === me.summonerName)),
+    enemyTeam: enemyTeam.map((p) => mapPlayer(p, false)),
+  });
+}
+
 function setupBackendClient(): void {
   backendClient.on("coaching-chunk", (text: string) => {
     currentMatchupBriefing += text;
@@ -345,10 +381,8 @@ app.whenReady().then(() => {
 });
 
 app.on("window-all-closed", () => {
-  // Keep app running in tray on macOS
-  if (process.platform !== "darwin") {
-    app.quit();
-  }
+  // Keep app running in tray on both macOS and Windows —
+  // the overlay is the only window and hiding it shouldn't quit the app
 });
 
 app.on("before-quit", () => {

@@ -39,6 +39,10 @@ export function useGameState() {
     api.onCoachingUpdateDone(() => {
       store.setUpdateDone();
     });
+
+    api.onLiveStatsUpdate((stats) => {
+      store.setLiveStats(stats as Parameters<typeof store.setLiveStats>[0]);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
