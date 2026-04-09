@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+:root {
+  --overlay-bg: rgba(15, 15, 20, 0.93);
+  --accent: #f472b6;
+  --accent-secondary: #facc15;
+  --accent-dim: #a855f7;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --border: rgba(244, 114, 182, 0.3);
+  --gradient: linear-gradient(135deg, #ec4899, #f59e0b);
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  overflow: hidden;
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Enable hover detection for click-through toggle */
+.overlay-panel {
+  -webkit-app-region: no-drag;
+}
+
+/* Coaching content heading highlights */
+.coaching-content strong {
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
