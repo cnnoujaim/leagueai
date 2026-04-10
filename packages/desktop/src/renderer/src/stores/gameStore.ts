@@ -31,7 +31,6 @@ interface GameState {
   isUpdateLoading: boolean;
   isUpdateDone: boolean;
   liveStats: LiveStatsSnapshot | null;
-  activeTab: "coaching" | "stats";
 
   setPhase: (phase: string) => void;
   appendCoachingText: (text: string) => void;
@@ -44,7 +43,23 @@ interface GameState {
   appendUpdateText: (text: string) => void;
   setUpdateDone: () => void;
   setLiveStats: (stats: LiveStatsSnapshot) => void;
-  setActiveTab: (tab: "coaching" | "stats") => void;
+}
+
+const AUTO_MINIMIZE_MS = 30 * 1000; // 30 seconds after each update completes
+let minimizeTimer: ReturnType<typeof setTimeout> | null = null;
+
+function startMinimizeTimer(set: (partial: Partial<GameState>) => void) {
+  clearMinimizeTimer();
+  minimizeTimer = setTimeout(() => {
+    set({ isExpanded: false });
+  }, AUTO_MINIMIZE_MS);
+}
+
+function clearMinimizeTimer() {
+  if (minimizeTimer) {
+    clearTimeout(minimizeTimer);
+    minimizeTimer = null;
+  }
 }
 
 export const useGameStore = create<GameState>((set) => ({
@@ -58,32 +73,38 @@ export const useGameStore = create<GameState>((set) => ({
   isUpdateLoading: false,
   isUpdateDone: false,
   liveStats: null,
-  activeTab: "coaching",
 
   setPhase: (phase) => set({ phase }),
 
-  appendCoachingText: (text) =>
+  appendCoachingText: (text) => {
+    clearMinimizeTimer();
     set((state) => ({
       coachingText: state.coachingText + text,
       isCoachingLoading: true,
       isExpanded: true,
-    })),
+    }));
+  },
 
-  setCoachingDone: () =>
-    set({ isCoachingDone: true, isCoachingLoading: false }),
+  setCoachingDone: () => {
+    startMinimizeTimer(set);
+    set({ isCoachingDone: true, isCoachingLoading: false });
+  },
 
   setCoachingError: (error) =>
     set({ coachingError: error, isCoachingLoading: false }),
 
-  setFullCoachingText: (text) =>
+  setFullCoachingText: (text) => {
+    startMinimizeTimer(set); // cached response — already complete, start timer immediately
     set({
       coachingText: text,
       isCoachingDone: true,
       isCoachingLoading: false,
       isExpanded: true,
-    }),
+    });
+  },
 
-  resetCoaching: () =>
+  resetCoaching: () => {
+    clearMinimizeTimer();
     set({
       coachingText: "",
       isCoachingDone: false,
@@ -93,23 +114,32 @@ export const useGameStore = create<GameState>((set) => ({
       isUpdateLoading: false,
       isUpdateDone: false,
       liveStats: null,
-    }),
+    });
+  },
 
-  appendUpdateText: (text) =>
+  appendUpdateText: (text) => {
+    clearMinimizeTimer();
     set((state) => ({
       updateText: state.updateText + text,
       isUpdateLoading: true,
       isExpanded: true,
-    })),
+    }));
+  },
 
-  setUpdateDone: () =>
-    set({ isUpdateDone: true, isUpdateLoading: false }),
+  setUpdateDone: () => {
+    startMinimizeTimer(set);
+    set({ isUpdateDone: true, isUpdateLoading: false });
+  },
 
-  toggleExpanded: () => set((state) => ({ isExpanded: !state.isExpanded })),
+  toggleExpanded: () => {
+    clearMinimizeTimer();
+    set((state) => ({ isExpanded: !state.isExpanded }));
+  },
 
-  setExpanded: (expanded) => set({ isExpanded: expanded }),
+  setExpanded: (expanded) => {
+    clearMinimizeTimer();
+    set({ isExpanded: expanded });
+  },
 
   setLiveStats: (stats) => set({ liveStats: stats }),
-
-  setActiveTab: (tab) => set({ activeTab: tab }),
 }));

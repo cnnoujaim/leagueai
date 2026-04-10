@@ -42,14 +42,14 @@ let updateInterval: ReturnType<typeof setInterval> | null = null;
 let zOrderInterval: ReturnType<typeof setInterval> | null = null;
 
 function createOverlayWindow(): BrowserWindow {
-  const { width: screenWidth } = screen.getPrimaryDisplay().workAreaSize;
+  const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
   const adapter = getPlatformAdapter();
 
   const win = new BrowserWindow({
-    width: 420,
-    height: 600,
-    x: screenWidth - 440,
-    y: 80,
+    width: screenWidth,
+    height: screenHeight,
+    x: 0,
+    y: 0,
     transparent: true,
     frame: false,
     alwaysOnTop: true,

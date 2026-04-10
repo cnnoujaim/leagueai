@@ -1,6 +1,11 @@
 import { defineConfig, externalizeDepsPlugin } from "electron-vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import { config } from "dotenv";
+import { resolve } from "node:path";
+
+// Load .env from repo root so define values are available at build time
+config({ path: resolve(__dirname, "..", "..", ".env") });
 
 export default defineConfig({
   main: {

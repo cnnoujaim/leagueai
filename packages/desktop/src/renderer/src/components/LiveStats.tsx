@@ -4,156 +4,123 @@ import type { PlayerStats } from "../stores/gameStore";
 export function LiveStats() {
   const { liveStats } = useGameStore();
 
-  if (!liveStats) {
-    return (
-      <div className="p-6 text-center text-[var(--text-secondary)] text-sm">
-        <div className="text-2xl mb-2">&#128202;</div>
-        <p>Waiting for game data...</p>
-        <p className="text-xs mt-1">
-          Stats will appear once you're in an active game.
-        </p>
-      </div>
-    );
-  }
+  if (!liveStats) return null;
 
-  const { gameTime, myTeam, enemyTeam } = liveStats;
+  const { gameTime, player, myTeam, enemyTeam } = liveStats;
   const minutes = Math.floor(gameTime / 60);
   const seconds = String(Math.floor(gameTime % 60)).padStart(2, "0");
 
-  const teamTotals = calcTeamTotals(myTeam);
-  const enemyTotals = calcTeamTotals(enemyTeam);
+  const teamGold = sumGold(myTeam);
+  const enemyGold = sumGold(enemyTeam);
+  const diff = teamGold - enemyGold;
 
   return (
-    <div className="p-3 space-y-3 text-sm">
-      {/* Game clock */}
-      <div className="text-center text-xs text-[var(--text-secondary)]">
-        {minutes}:{seconds}
-      </div>
-
-      {/* Team totals comparison */}
-      <div className="grid grid-cols-3 gap-1 text-center text-xs">
-        <TeamTotal label="YOUR TEAM" totals={teamTotals} side="left" />
-        <div className="flex flex-col justify-center gap-1 text-[var(--text-secondary)]">
-          <span>KDA</span>
-          <span>CS</span>
-          <span>Gold</span>
+    <div
+      className="rounded-b-lg border border-t-0 border-[var(--border)] bg-[var(--overlay-bg)] shadow-2xl"
+      onMouseEnter={() => window.leagueAI?.setIgnoreMouseEvents(false)}
+      onMouseLeave={() => window.leagueAI?.setIgnoreMouseEvents(true)}
+    >
+      <div className="flex items-center text-xs">
+        {/* Allied team */}
+        <div className="flex items-center gap-1 px-2 py-1.5">
+          {myTeam.map((p) => (
+            <ChampChip
+              key={p.summonerName}
+              player={p}
+              isSelf={p.summonerName === player.summonerName}
+              side="ally"
+            />
+          ))}
         </div>
-        <TeamTotal label="ENEMY" totals={enemyTotals} side="right" />
-      </div>
 
-      {/* Per-player scoreboard */}
-      <div className="space-y-1">
-        <div className="text-xs font-semibold bg-gradient-to-r from-pink-400 to-yellow-400 bg-clip-text text-transparent">
-          YOUR TEAM
+        {/* Center scoreboard */}
+        <div className="flex items-center gap-3 px-3 py-1.5 border-x border-[var(--border)]">
+          <span className="text-blue-400 font-semibold">{formatGold(teamGold)}</span>
+
+          <div className="flex flex-col items-center leading-tight">
+            <span className="text-[10px] text-[var(--text-secondary)]">
+              {minutes}:{seconds}
+            </span>
+            <span className={`text-[10px] font-bold ${diff > 0 ? "text-green-400" : diff < 0 ? "text-red-400" : "text-[var(--text-secondary)]"}`}>
+              {diff > 0 ? "+" : ""}{formatGold(diff)}
+            </span>
+          </div>
+
+          <span className="text-red-400 font-semibold">{formatGold(enemyGold)}</span>
         </div>
-        {myTeam.map((p) => (
-          <PlayerRow key={p.summonerName} player={p} isAlly />
-        ))}
-      </div>
 
-      <div className="border-t border-[var(--border)]" />
-
-      <div className="space-y-1">
-        <div className="text-xs font-semibold text-red-400">
-          ENEMY TEAM
+        {/* Enemy team */}
+        <div className="flex items-center gap-1 px-2 py-1.5">
+          {enemyTeam.map((p) => (
+            <ChampChip
+              key={p.summonerName}
+              player={p}
+              isSelf={false}
+              side="enemy"
+            />
+          ))}
         </div>
-        {enemyTeam.map((p) => (
-          <PlayerRow key={p.summonerName} player={p} isAlly={false} />
-        ))}
       </div>
     </div>
   );
 }
 
-function TeamTotal({
-  label,
-  totals,
+function ChampChip({
+  player,
+  isSelf,
   side,
 }: {
-  label: string;
-  totals: { kills: number; deaths: number; assists: number; cs: number; gold: number };
-  side: "left" | "right";
+  player: PlayerStats;
+  isSelf: boolean;
+  side: "ally" | "enemy";
 }) {
-  const align = side === "left" ? "text-left" : "text-right";
-  return (
-    <div className={`flex flex-col gap-1 ${align}`}>
-      <span className="font-semibold text-[var(--text-primary)]">{label}</span>
-      <span className="text-[var(--text-primary)]">
-        {totals.kills}/{totals.deaths}/{totals.assists}
-      </span>
-      <span className="text-[var(--text-primary)]">{totals.cs}</span>
-      <span className="text-yellow-400">{formatGold(totals.gold)}</span>
-    </div>
-  );
-}
+  const borderColor = isSelf
+    ? "border-[var(--accent)]"
+    : side === "ally"
+      ? "border-blue-500/40"
+      : "border-red-500/40";
 
-function PlayerRow({ player, isAlly }: { player: PlayerStats; isAlly: boolean }) {
-  const kda = `${player.kills}/${player.deaths}/${player.assists}`;
-  const nameColor = player.isDead
-    ? "text-red-400/60"
-    : "text-[var(--text-primary)]";
+  const bgColor = player.isDead
+    ? "bg-gray-800/60"
+    : side === "ally"
+      ? "bg-blue-950/40"
+      : "bg-red-950/40";
 
   return (
-    <div className={`flex items-center gap-2 px-1 py-0.5 rounded text-xs ${player.isDead ? "opacity-60" : ""}`}>
-      {/* Champion + level */}
-      <div className="flex items-center gap-1 w-[100px] min-w-[100px]">
-        <span className={`font-medium truncate ${nameColor}`}>
+    <div
+      className={`flex items-center gap-1.5 px-1.5 py-1 rounded border ${borderColor} ${bgColor} ${player.isDead ? "opacity-50" : ""}`}
+      title={`${player.summonerName} — ${player.kills}/${player.deaths}/${player.assists} | ${player.cs} CS${player.gold != null ? ` | ${formatGold(player.gold)} gold` : ""}`}
+    >
+      <div className="flex items-baseline gap-0.5">
+        <span className={`text-[11px] font-medium max-w-[60px] truncate ${kdaColor(player)}`}>
           {player.championName}
         </span>
-        <span className="text-[var(--text-secondary)]">
+        <span className="text-[9px] text-[var(--text-secondary)]">
           {player.level}
         </span>
       </div>
 
-      {/* KDA */}
-      <div className="w-[60px] text-center">
-        <span className={kdaColor(player)}>{kda}</span>
-      </div>
-
-      {/* CS */}
-      <div className="w-[30px] text-center text-[var(--text-secondary)]">
-        {player.cs}
-      </div>
-
-      {/* Gold (only shown for self) */}
-      <div className="w-[45px] text-right">
-        {player.gold != null ? (
-          <span className="text-yellow-400">{formatGold(player.gold)}</span>
-        ) : (
-          <span className="text-[var(--text-secondary)]">-</span>
-        )}
-      </div>
-
-      {/* Items (compact) */}
-      <div className="flex-1 text-right text-[var(--text-secondary)] truncate">
-        {player.items.length > 0 ? `${player.items.length} items` : ""}
-      </div>
+      {/* Gold */}
+      <span className="text-[10px] text-yellow-400">
+        {player.gold != null ? formatGold(player.gold) : "-"}
+      </span>
     </div>
   );
 }
 
-function calcTeamTotals(team: PlayerStats[]) {
-  return team.reduce(
-    (acc, p) => ({
-      kills: acc.kills + p.kills,
-      deaths: acc.deaths + p.deaths,
-      assists: acc.assists + p.assists,
-      cs: acc.cs + p.cs,
-      gold: acc.gold + (p.gold ?? 0),
-    }),
-    { kills: 0, deaths: 0, assists: 0, cs: 0, gold: 0 }
-  );
+function sumGold(team: PlayerStats[]): number {
+  return team.reduce((sum, p) => sum + (p.gold ?? 0), 0);
 }
 
 function formatGold(gold: number): string {
-  if (gold >= 1000) return `${(gold / 1000).toFixed(1)}k`;
+  const abs = Math.abs(gold);
+  if (abs >= 1000) return `${(gold / 1000).toFixed(1)}k`;
   return String(gold);
 }
 
 function kdaColor(player: PlayerStats): string {
   const ratio = (player.kills + player.assists) / Math.max(player.deaths, 1);
-  if (ratio >= 5) return "text-yellow-400";
-  if (ratio >= 3) return "text-green-400";
-  if (ratio >= 1.5) return "text-[var(--text-primary)]";
+  if (ratio >= 5) return "text-green-400";
+  if (ratio >= 3) return "text-yellow-400";
   return "text-red-400";
 }

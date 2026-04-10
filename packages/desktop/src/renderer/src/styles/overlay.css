@@ -16,6 +16,8 @@ body,
 #root {
   margin: 0;
   padding: 0;
+  width: 100vw;
+  height: 100vh;
   background: transparent;
   overflow: hidden;
   font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
