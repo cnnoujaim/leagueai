@@ -3,10 +3,9 @@ import type { MatchupRequest, PostGameRequest, InGameUpdateRequest, PatchMeta } 
 const SYSTEM_PROMPT = `You are a League of Legends coaching assistant built into an in-game overlay. Your advice appears during the loading screen, so players need to read it in under 30 seconds.
 
 CRITICAL RULES:
-- You MUST use the PROVIDED CURRENT PATCH DATA for all build recommendations, win rates, and tier assessments.
-- Do NOT rely on your training data for item builds, runes, or win rates — it may be outdated.
-- If the provided data does not cover something, say so rather than guessing.
-- Your training knowledge IS reliable for: champion ability mechanics, general lane strategies, macro concepts, team fight positioning, wave management theory.
+- If CURRENT PATCH DATA is provided, use it for build recommendations, win rates, and tier assessments.
+- If no patch data is provided, use your best knowledge of current items and runes — recommend specific builds confidently, do not hedge or say "based on general knowledge."
+- Your training knowledge IS reliable for: champion ability mechanics, general lane strategies, macro concepts, team fight positioning, wave management theory, and item/rune synergies.
 
 FORMAT RULES:
 - Be concise. Use short sentences and bullet points.
@@ -20,21 +19,28 @@ export function buildMatchupPrompt(
   const championMeta = meta?.champions[req.playerChampion]?.[req.playerRole];
   const matchupData = championMeta?.matchups[req.enemyChampion];
 
+  const hasBuildData = championMeta
+    && championMeta.recommendedBuild.items.length > 0
+    && championMeta.recommendedBuild.runes.primary !== "TBD";
+
   let metaContext = "";
-  if (championMeta) {
+  if (championMeta && hasBuildData) {
     metaContext += `\nCURRENT PATCH DATA (Patch ${req.patch}):`;
     metaContext += `\n- ${req.playerChampion} (${req.playerRole}) — Tier: ${championMeta.tier}, Win Rate: ${championMeta.winRate}%`;
     metaContext += `\n- Recommended Build: ${championMeta.recommendedBuild.items.join(" → ")}`;
     metaContext += `\n- Recommended Runes: ${championMeta.recommendedBuild.runes.primary} / ${championMeta.recommendedBuild.runes.secondary}`;
+    if (championMeta.recommendedBuild.runes.perks.length > 0) {
+      metaContext += ` (${championMeta.recommendedBuild.runes.perks.join(", ")})`;
+    }
     metaContext += `\n- Skill Order: ${championMeta.recommendedBuild.skillOrder.join(" → ")}`;
 
-    if (matchupData) {
+    if (matchupData && matchupData.games > 0) {
       metaContext += `\n- ${req.playerChampion} vs ${req.enemyChampion} winrate: ${matchupData.winRate}% (${matchupData.games.toLocaleString()} games)`;
       metaContext += `\n- Matchup difficulty: ${matchupData.difficulty}`;
     }
   } else {
     metaContext +=
-      "\nNote: No current patch meta data available for this champion/role. Use your general knowledge but caveat any build-specific advice.";
+      `\nPatch ${req.patch} — no curated build data available. Use your knowledge of current items and runes to recommend the best build for this matchup. Be specific with item names and rune choices.`;
   }
 
   metaContext += `\n- Your team: ${req.teamComp.join(", ")}`;
@@ -104,7 +110,7 @@ Items: ${e.items.length > 0 ? e.items.join(", ") : "Starting items"}
 
 Teams: ${req.teamComp.join(", ")} vs ${req.enemyComp.join(", ")}`;
 
-  if (championMeta) {
+  if (championMeta && championMeta.recommendedBuild.items.length > 0) {
     prompt += `\n\nRECOMMENDED BUILD PATH: ${championMeta.recommendedBuild.items.join(" → ")}`;
   }
 
