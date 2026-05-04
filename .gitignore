@@ -24,3 +24,6 @@ packages/server/data/meta/[0-9]*
 # Debug/test files
 electron-shim.cjs
 scripts/test-claude.ts
+
+# Claude Code local state
+.claude/
