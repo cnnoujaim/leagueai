@@ -64,7 +64,7 @@ export interface LivePlayerData {
   championName: string;
   isBot: boolean;
   isDead: boolean;
-  items: { itemID: number; displayName: string; count: number }[];
+  items: { itemID: number; displayName: string; count: number; price: number }[];
   level: number;
   position: string;
   scores: {

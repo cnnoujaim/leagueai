@@ -100,14 +100,18 @@ export function buildInGameUpdatePrompt(
 
   const championMeta = meta?.champions[req.playerChampion]?.[req.playerRole];
 
+  const goldDiff = req.teamGoldSpent - req.enemyGoldSpent;
+  const goldLead = goldDiff === 0 ? "even" : `${goldDiff > 0 ? "AHEAD" : "BEHIND"} by ${Math.abs(goldDiff).toLocaleString()}g`;
+
   let prompt = `IN-GAME UPDATE at ${minutes} minutes for ${req.playerChampion} (${req.playerRole}) vs ${req.enemyChampion} (${req.enemyRole}):
 
 YOU: Level ${p.level} | ${p.kills}/${p.deaths}/${p.assists} KDA | ${p.cs} CS | ${p.gold} gold
 Items: ${p.items.length > 0 ? p.items.join(", ") : "Starting items"}
 
-ENEMY ${req.enemyChampion}: Level ${e.level} | ${e.kills}/${e.deaths}/${e.assists} KDA | ${e.cs} CS
+ENEMY ${req.enemyChampion}: Level ${e.level} | ${e.kills}/${e.deaths}/${e.assists} KDA | ${e.cs} CS | ~${e.gold.toLocaleString()}g spent on items
 Items: ${e.items.length > 0 ? e.items.join(", ") : "Starting items"}
 
+TEAM GOLD (spent on items): your team ${req.teamGoldSpent.toLocaleString()}g vs enemy ${req.enemyGoldSpent.toLocaleString()}g — your team is ${goldLead}
 Teams: ${req.teamComp.join(", ")} vs ${req.enemyComp.join(", ")}`;
 
   if (championMeta && championMeta.recommendedBuild.items.length > 0) {

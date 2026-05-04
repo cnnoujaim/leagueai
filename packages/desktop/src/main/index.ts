@@ -229,6 +229,15 @@ function startUpdateCycle(): void {
       (p) => p.team !== me.team && p.championName === currentMatchup!.enemyChampion
     ) ?? liveData.allPlayers.find((p) => p.team !== me.team);
 
+    const sumItemGold = (p: { items: { price: number; count: number }[] } | undefined) =>
+      p?.items.reduce((sum, i) => sum + i.price * i.count, 0) ?? 0;
+    const teamGoldSpent = liveData.allPlayers
+      .filter((p) => p.team === me.team)
+      .reduce((sum, p) => sum + sumItemGold(p), 0);
+    const enemyGoldSpent = liveData.allPlayers
+      .filter((p) => p.team !== me.team)
+      .reduce((sum, p) => sum + sumItemGold(p), 0);
+
     // Gather recent events from the last 5 minutes
     const gameTime = liveData.gameData.gameTime;
     const recentEvents = liveData.events.Events
@@ -264,8 +273,11 @@ function startUpdateCycle(): void {
         deaths: enemy?.scores.deaths ?? 0,
         assists: enemy?.scores.assists ?? 0,
         cs: enemy?.scores.creepScore ?? 0,
+        gold: sumItemGold(enemy),
         items: enemy?.items.map((i) => i.displayName) ?? [],
       },
+      teamGoldSpent,
+      enemyGoldSpent,
       recentEvents,
       previousBriefing: currentMatchupBriefing,
     });

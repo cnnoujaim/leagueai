@@ -55,8 +55,11 @@ export interface InGameUpdateRequest {
     deaths: number;
     assists: number;
     cs: number;
+    gold: number;
     items: string[];
   };
+  teamGoldSpent: number;
+  enemyGoldSpent: number;
   recentEvents: string[];
   previousBriefing: string;
 }
