@@ -8,8 +8,9 @@ import { clearMetaCache } from "../meta/data-service.js";
 const execAsync = promisify(execFile);
 const __dirname = dirname(fileURLToPath(import.meta.url));
 // In dev: scripts/ is at repo root; in production (Docker): scripts/ is at /app/scripts/
+// Production __dirname is /app/dist/cron/, so two `..` reach /app/.
 const SCRIPT_PATH = process.env.NODE_ENV === "production"
-  ? join(__dirname, "..", "scripts", "update-meta.ts")
+  ? join(__dirname, "..", "..", "scripts", "update-meta.ts")
   : join(__dirname, "..", "..", "..", "..", "scripts", "update-meta.ts");
 
 export function startMetaCron(): void {

@@ -16,9 +16,10 @@ export async function getMetaData(patch?: string): Promise<PatchMeta | null> {
   }
 
   try {
-    // In dev: data/ relative to server package; in production (Docker): /app/data/
+    // In dev: data/ relative to server package; in production (Docker): /app/data/.
+    // Production __dirname is /app/dist/meta/, so two `..` reach /app/.
     const base = process.env.NODE_ENV === "production"
-      ? join(__dirname, "..", "data")
+      ? join(__dirname, "..", "..", "data")
       : join(__dirname, "..", "..", "data");
     const filePath = join(base, "meta", `${targetPatch}.json`);
     const raw = await readFile(filePath, "utf-8");
