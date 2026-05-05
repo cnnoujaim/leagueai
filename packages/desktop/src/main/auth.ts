@@ -1,5 +1,6 @@
 import { app, shell } from "electron";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import WebSocket from "ws";
 import http from "node:http";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
@@ -11,7 +12,9 @@ function getSupabase(): SupabaseClient | null {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_ANON_KEY;
   if (!url || !key) return null;
-  _supabase = createClient(url, key);
+  _supabase = createClient(url, key, {
+    realtime: { transport: WebSocket as unknown as typeof globalThis.WebSocket },
+  });
   return _supabase;
 }
 
