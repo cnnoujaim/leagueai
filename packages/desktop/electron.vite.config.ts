@@ -9,7 +9,10 @@ config({ path: resolve(__dirname, "..", "..", ".env") });
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin()],
+    // Bundle runtime deps into the main process — electron-builder excludes
+    // node_modules from the asar, and npm workspaces hoist them out of
+    // packages/desktop/, so they wouldn't be findable at runtime otherwise.
+    plugins: [externalizeDepsPlugin({ exclude: ["dotenv", "ws", "@supabase/supabase-js"] })],
     define: {
       "process.env.LEAGUEAI_SERVER_URL": JSON.stringify(
         process.env.LEAGUEAI_SERVER_URL || "https://leagueai-server-production.up.railway.app"
